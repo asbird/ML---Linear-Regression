@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import pdb
+from numpy import genfromtxt
 
 
 
@@ -41,18 +42,35 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 # Math equations
 def h_x(theta, x):
-    theta = theta.transpose()
-    return theta.dot(x)
+    """
+        Hypothesis function
+    """
+    return x.dot(theta.values)
 
-def deriv(x, y, theta):
+def cost_deriv(x, y, theta, feature):
+    """
+        Derivative of cost function
+    """
+    hx = h_x(theta, x)
+    sus = -y.sub(hx,0) #minus at the beggining because eq is hh-y => == -(-hh+y)
     sum = 0
     for index, row in x.iterrows():
         print(index)
-        for feature in list(X):
-            h_xi = h_x(theta, row)
-            yi =  y.at[index,'price']
-            sum += (h_xi - yi)*X.at[index,feature]
+        h_xi = h_x(theta, row) # ok
+        yi =  y.at[index,'price']
+        sum += (h_xi - yi)*X.at[index,feature]
     pdb.set_trace()
+
+# def gradient(x, y, theta, iterations, alpha):
+#     features = list(my_dataframe)
+#     numOfTheta = theta.shape[0]
+#     tempTheta = np.zeros(numOfTheta)
+#     for i in range(iterations):
+#         for i in numOfTheta:
+
+
+
+
 
 
 def FeatureScalling(X):
@@ -70,11 +88,14 @@ def FeatureScalling(X):
 
 
 df = pd.read_csv('house_data.csv', sep=',')
+
 # features = ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms']
 features = ['sqft_living', 'grade']
 
 X = df[features]
 y = df[['price']]
-# FeatureScalling(X)
+
 theta = np.array([2,2])
-deriv(X, y, theta)
+
+# FeatureScalling(X)
+# cost_deriv(X, y, theta)
