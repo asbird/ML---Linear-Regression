@@ -16,28 +16,65 @@ import pdb
 # Iteration through Data frame
 # for index, row in df.iterrows():
 #     print(row['id'])
+
+# Print iterations progress
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+    # Print New Line on Complete
+    if iteration == total:
+        print()
+
+
+# Math equations
 def h_x(theta, x):
     theta = theta.transpose()
-    return np.matmul(theta,x)
+    return theta.dot(x)
+
+def deriv(x, y, theta):
+    sum = 0
+    for index, row in x.iterrows():
+        print(index)
+        for feature in list(X):
+            h_xi = h_x(theta, row)
+            yi =  y.at[index,'price']
+            sum += (h_xi - yi)*X.at[index,feature]
+    pdb.set_trace()
+
 
 def FeatureScalling(X):
+    print("Starting feature scalling...\nPlease Wait.")
+    printProgressBar(0, len(X.index), prefix = 'Feature scalling progress:', suffix = 'Complete', length = 50)
     for index, row in X.iterrows():
         for feature in list(X):
-            _prev = X.at[index,feature]
-            _mean = X[feature].mean()
-            _max = X[feature].max()
-            _min = X[feature].min()
-            _current = (_prev - _mean) / (_max - _min)
+            _prev=X.at[index,feature]
+            _current = (X.at[index,feature] - X[feature].mean())/(X[feature].max() - X[feature].min())
             X.at[index,feature] = _current
-
+            printProgressBar(index, len(X.index), prefix = 'Feature scalling progress:', suffix = 'Complete', length = 50)
             # DEBUGGING
             # print(str(index) +': Feature:' + str(feature) +
             # ' Prev: '+str(_prev)+' Current: '+str(_current))
 
+
 df = pd.read_csv('house_data.csv', sep=',')
-features = ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms']
+# features = ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms']
+features = ['sqft_living', 'grade']
 
 X = df[features]
 y = df[['price']]
-
-FeatureScalling(X)
+# FeatureScalling(X)
+theta = np.array([2,2])
+deriv(X, y, theta)
