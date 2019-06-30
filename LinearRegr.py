@@ -6,19 +6,6 @@ import seaborn as sns
 import pdb
 from numpy import genfromtxt
 
-
-
-
-# corr = df.corr()
-#
-# ax = sns.heatmap(corr, cmap='coolwarm_r',center=0)
-# plt.show()
-#
-# Iteration through Data frame
-# for index, row in df.iterrows():
-#     print(row['id'])
-
-# Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
     """
     Call in a loop to create terminal progress bar
@@ -38,7 +25,6 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     # Print New Line on Complete
     if iteration == total:
         print()
-
 
 # Math equations
 def h_x(Theta, x):
@@ -64,39 +50,65 @@ def cost_deriv(x, y, Theta):
     hxSuby = hx.sub(y.values)
     hxSubyMulX = x.mul(hxSuby.values,0)
     suM = hxSubyMulX.sum(axis = 0, skipna = True)
-    return suM.mul(1/m)
+    return suM.mul(2/m)
+
+def cost_deriv2(x, y, Theta):
+
 
 def calc_new_theta(x, y, Theta, alpha):
     features = list(x)
-    cd = cost_deriv(x, y, Theta).mul(alpha)
     tempTheta = Theta
+    cd = cost_deriv(x, y, Theta).mul(alpha)
     for i in range(len(features)):
         tempTheta.at[i,'theta'] = theta.at[i,'theta']-cd.at[features[i]]
     return tempTheta
 
 def gradient_descent(x, y, Theta, alpha, iterations):
+    errors = []
     costs = []
+
+    actual_cost=0
+    print('Starting Gradient descent algorithm...\nPlease Wait')
+    # printProgressBar(0, iterations, prefix = 'Gradient descent progress:', suffix = 'Complete', length = 50)
     for i in range(iterations):
-        tempTheta=calc_new_theta(x, y, Theta, alpha)
-        Theta=tempTheta
+        Theta=calc_new_theta(x, y, Theta, alpha)
+        prev_cost = actual_cost
         actual_cost = cost_fct(x, y, Theta)
-        print(actual_cost)
-        costs.append(actual_cost)
-    plt.plot(costs,np.arange(len(costs)))
+        # printProgressBar(i, iterations, prefix = 'Gradient descent progress:', suffix = 'Complete', length = 50)
+        if int(actual_cost)<10:
+            break
+        if i>0:
+            Error = float(prev_cost)-float(actual_cost)
+            errors.append(Error)
+            costs.append(actual_cost)
+            print("Cost: "+str(float(actual_cost)))
+            print("Error:"+str(float(Error)))
+
+    print('Gradient descent algorithm has been succesfully completed')
+
+    plt.subplot(2, 1, 1)
+    plt.plot(np.arange(len(costs)), costs)
+    plt.title('Iterations')
+    plt.ylabel('Cost fct')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(np.arange(len(errors)), errors)
+    plt.xlabel('Iterations')
+    plt.ylabel('Errors')
+
     plt.show()
 
-
-
-
 def FeatureScalling(X):
-    # print("Starting feature scalling...\nPlease Wait.")
+    print("Starting feature scalling...\nPlease Wait.")
     printProgressBar(0, len(X.index), prefix = 'Feature scalling progress:', suffix = 'Complete', length = 50)
     for index, row in X.iterrows():
         for feature in list(X):
+            if feature == 'ones':
+                continue
             _prev=X.at[index,feature]
             _current = (X.at[index,feature] - X[feature].mean())/(X[feature].max() - X[feature].min())
             X.at[index,feature] = float(_current)
-            # printProgressBar(index, len(X.index), prefix = 'Feature scalling progress:', suffix = 'Complete', length = 50)
+            printProgressBar(index, len(X.index), prefix = 'Feature scalling progress:', suffix = 'Complete', length = 50)
             # DEBUGGING
             # print(str(index) +': Feature:' + str(feature) +
             # ' Prev: '+str(_prev)+' Current: '+str(X.at[index,feature]))
@@ -105,21 +117,27 @@ def FeatureScalling(X):
 df = pd.read_csv('house_data.csv', sep=',')
 
 # features = ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms']
-features = ['sqft_living', 'grade']
+features = ['sqft_living', 'sqft_living', 'grade', 'sqft_above', 'bathrooms']
 
 X = df[features]
 y = df[['price']]
+X.columns=['ones', 'sqft_living','grade', 'sqft_above', 'bathrooms' ]
+X=X[:5]
+y=y[:5]
+X['ones'] = 1
 
+# X = pd.concat([ones, X], axis=1, sort=False)
 # Slicing data for the purpose of creating algorithms and checking
 # if they work correctly
-X = X[:1000]
-y = y[:1000]
 X=X.astype(np.float64)
+theta = pd.DataFrame(np.random.randint(0,10,size=(5,1)), columns=['theta'])
+pdb.set_trace()
+cost_deriv(X, y, theta)
 
-FeatureScalling(X)
-theta = pd.DataFrame({'theta':[2,2]})
-# cost_deriv(X, y, theta)
-# gradient_descent(X, y, theta, 20, 10)
-gradient_descent(X, y, theta, 0.01, 1000)
+# FeatureScalling(X)
 
-# cost_deriv(X, y, theta)
+
+# gradient_descent(X, y, theta, 0.4, 5000)
+# asd1 = h_x(theta, X.iloc[[1]])
+# asd3 = h_x(theta, X.iloc[[3]])
+# asd5 = h_x(theta, X.iloc[[5]])
