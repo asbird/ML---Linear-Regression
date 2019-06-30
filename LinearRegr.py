@@ -33,9 +33,25 @@ def h_x(Theta, x):
     """
     return x.dot(Theta.values)
 
+def h_x2(Theta, x):
+    #Setting second row to 1 because x2 doesn't need to be multiplied
+    #according to x0=1, x1, x2^2, x2^3  etc.
+    x = x_power(x)
+    return x.dot(Theta.values)
+
+def x_power(x):
+    xPow = x.copy()
+    xPow[x.columns[1]]=1.0
+    p=2
+    for idea in range(len(x.columns)-2):
+        x=x*xPow
+        xPow[x.columns[p]]=1.0
+        p=p+1
+    return x
+
 def cost_fct(x, y, Theta):
     m=len(x.index)
-    hx = h_x(Theta, x)
+    hx = h_x2(Theta, x)
     hxSuby = hx.sub(y.values)
     suM = hxSuby.sum(axis = 0, skipna = True)
     x = pow(suM, 2)
@@ -43,22 +59,31 @@ def cost_fct(x, y, Theta):
 
 def cost_deriv(x, y, Theta):
     """
-        Derivative of cost function
+        Derivative of cost function 0o*x0 + 01*x1 + 02x2+ 03x3 etc.
     """
     m=len(X.index)
     hx = h_x(Theta, x)
     hxSuby = hx.sub(y.values)
     hxSubyMulX = x.mul(hxSuby.values,0)
     suM = hxSubyMulX.sum(axis = 0, skipna = True)
-    return suM.mul(2/m)
+    return suM.mul(1/m)
 
 def cost_deriv2(x, y, Theta):
-
+    """
+        Derivative of cost function 0o*x0 + 01*x1 + 02x2^1+ 03x3^2 etc.
+    """
+    m=len(X.index)
+    hx = h_x2(Theta, x)
+    hxSuby = hx.sub(y.values)
+    x=x_power(x)
+    hxSubyMulX = x.mul(hxSuby.values,0)
+    suM = hxSubyMulX.sum(axis = 0, skipna = True)
+    return suM.mul(1/m)
 
 def calc_new_theta(x, y, Theta, alpha):
     features = list(x)
     tempTheta = Theta
-    cd = cost_deriv(x, y, Theta).mul(alpha)
+    cd = cost_deriv2(x, y, Theta).mul(alpha)
     for i in range(len(features)):
         tempTheta.at[i,'theta'] = theta.at[i,'theta']-cd.at[features[i]]
     return tempTheta
@@ -122,22 +147,22 @@ features = ['sqft_living', 'sqft_living', 'grade', 'sqft_above', 'bathrooms']
 X = df[features]
 y = df[['price']]
 X.columns=['ones', 'sqft_living','grade', 'sqft_above', 'bathrooms' ]
-X=X[:5]
-y=y[:5]
+X=X[:1000]
+y=y[:1000]
 X['ones'] = 1
 
 # X = pd.concat([ones, X], axis=1, sort=False)
 # Slicing data for the purpose of creating algorithms and checking
 # if they work correctly
 X=X.astype(np.float64)
-theta = pd.DataFrame(np.random.randint(0,10,size=(5,1)), columns=['theta'])
+theta = pd.DataFrame(np.random.randint(-1000,1000,size=(5,1)), columns=['theta'])
+# h_x2(X, y, theta)
+
+FeatureScalling(X)
+
+
+gradient_descent(X, y, theta, 0.4, 5000)
+asd1 = h_x(theta, X.iloc[[1]])
+asd3 = h_x(theta, X.iloc[[3]])
+asd50 = h_x(theta, X.iloc[[50]])
 pdb.set_trace()
-cost_deriv(X, y, theta)
-
-# FeatureScalling(X)
-
-
-# gradient_descent(X, y, theta, 0.4, 5000)
-# asd1 = h_x(theta, X.iloc[[1]])
-# asd3 = h_x(theta, X.iloc[[3]])
-# asd5 = h_x(theta, X.iloc[[5]])
