@@ -82,21 +82,35 @@ def cost_deriv2(x, y, Theta):
 
 def calc_new_theta(x, y, Theta, alpha):
     features = list(x)
-    tempTheta = Theta
+    tempTheta = Theta.copy()
     cd = cost_deriv2(x, y, Theta).mul(alpha)
     for i in range(len(features)):
-        tempTheta.at[i,'theta'] = theta.at[i,'theta']-cd.at[features[i]]
+        tempTheta.at[i,'theta'] = Theta.at[i,'theta']-cd.at[features[i]]
     return tempTheta
 
-def gradient_descent(x, y, Theta, alpha, iterations):
+def calc_new_theta_reg(x, y, Theta, alpha, lamb):
+    features = list(x)
+    tempTheta = Theta.copy()
+    reg_param =((lamb/len(x.index))*Theta)*alpha
+    cd = cost_deriv2(x, y, Theta).mul(alpha)
+    for i in range(len(features)):
+        #separate cost derivatives because we don't to penalize Theta0
+        if i == 0:
+            tempTheta.at[i,'theta'] = theta.at[i,'theta']-cd.at[features[i]]
+        else:
+            tempTheta.at[i,'theta'] = theta.at[i,'theta']-(cd.at[features[i]]+reg_param.at[i,'theta'])
+    return tempTheta
+
+def gradient_descent(x, y, Theta, alpha, iterations,lamb):
     errors = []
     costs = []
-
+    Error=1
     actual_cost=0
     print('Starting Gradient descent algorithm...\nPlease Wait')
     # printProgressBar(0, iterations, prefix = 'Gradient descent progress:', suffix = 'Complete', length = 50)
     for i in range(iterations):
         Theta=calc_new_theta(x, y, Theta, alpha)
+        # Theta=calc_new_theta_reg(x, y, Theta, alpha,lamb)
         prev_cost = actual_cost
         actual_cost = cost_fct(x, y, Theta)
         # printProgressBar(i, iterations, prefix = 'Gradient descent progress:', suffix = 'Complete', length = 50)
@@ -108,6 +122,7 @@ def gradient_descent(x, y, Theta, alpha, iterations):
             costs.append(actual_cost)
             print("Cost: "+str(float(actual_cost)))
             print("Error:"+str(float(Error)))
+    return Theta
 
     print('Gradient descent algorithm has been succesfully completed')
 
@@ -147,8 +162,8 @@ features = ['sqft_living', 'sqft_living', 'grade', 'sqft_above', 'bathrooms']
 X = df[features]
 y = df[['price']]
 X.columns=['ones', 'sqft_living','grade', 'sqft_above', 'bathrooms' ]
-X=X[:1000]
-y=y[:1000]
+# X=X[:5000]
+# y=y[:5000]
 X['ones'] = 1
 
 # X = pd.concat([ones, X], axis=1, sort=False)
@@ -160,8 +175,7 @@ theta = pd.DataFrame(np.random.randint(-1000,1000,size=(5,1)), columns=['theta']
 
 FeatureScalling(X)
 
-
-gradient_descent(X, y, theta, 0.4, 5000)
+theta = gradient_descent(X, y, theta.astype(np.float64), 0.01, 15000,200001)
 asd1 = h_x(theta, X.iloc[[1]])
 asd3 = h_x(theta, X.iloc[[3]])
 asd50 = h_x(theta, X.iloc[[50]])
